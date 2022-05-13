@@ -1,4 +1,6 @@
-# combinators
+"""
+Random generators.
+"""
 import random
 
 def randn(n):
