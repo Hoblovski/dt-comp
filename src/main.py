@@ -1,6 +1,7 @@
 """Entry."""
 import argparse
 from .prog import *
+import sys
 
 def main():
     parser = argparse.ArgumentParser(
@@ -11,9 +12,13 @@ def main():
     args = parser.parse_args()
 
     if args.seed is not None:
-        random.seed(args.seed)
+        seed = args.seed
+    else:
+        seed = randn(sys.maxsize)
 
+    random.seed(seed)
     gs = GeneratorState()
     prog = Program(gs)
     out = OutputManager()
+    out.emit(f'/* seed = {seed} */\n', br=True)
     prog.emit(out)
