@@ -25,11 +25,7 @@ class BinaryExpr(Expression):
         self.rhs = randexpr(gs, depth)
 
     def emit(self, out):
-        out.emitstr('(')
-        self.lhs.emit(out)
-        out.emitstr(self.op)
-        self.rhs.emit(out)
-        out.emitstr(')')
+        out.emit('(', self.lhs, self.op, self.rhs, ')')
 
 class UnaryExpr(Expression):
     def __init__(self, gs, depth):
@@ -38,10 +34,7 @@ class UnaryExpr(Expression):
         self.sub = randexpr(gs, depth)
 
     def emit(self, out):
-        out.emitstr('(')
-        out.emitstr(self.op)
-        self.sub.emit(out)
-        out.emitstr(')')
+        out.emit('(', self.op, self.sub, ')')
 
 class VarRefExpr(Expression):
     def __init__(self, gs, depth):
@@ -49,40 +42,35 @@ class VarRefExpr(Expression):
         self.var = gs.randvar()
 
     def emit(self, out):
-        out.emitstr('(')
-        out.emitstr(self.var)
-        out.emitstr(')')
+        out.emit('(', self.var, ')')
 
 class AssignExpr(Expression):
     def __init__(self, gs, depth):
         super().__init__(gs, depth)
         self.rhs = randexpr(gs, depth)
-        # choose whether assign to existing variable or create a new one
+        # assignment can create new variables whose declaration will be hoisted to head of current block.
         if randn(100) <= 70 and len(gs.vars) > 0:
             self.lhs = gs.randvar()
         else:
-            # must come after rhs
+            # must come after rhs to prevent uninited reads
             self.lhs = gs.freshvar()
 
     def emit(self, out):
-        out.emitstr('(')
-        out.emitstr(self.lhs)
-        out.emitstr('=')
-        self.rhs.emit(out)
-        out.emitstr(')')
+        out.emit('(', self.lhs, '=', self.rhs, ')')
 
-# handling lhs
-# random generate variable: allow undefined variable (insert immediate variable)
 def randexpr(gs, depth):
-    binaryw = 0 if depth >= Config.MaxExprDepth else 1
-    unaryw = 0 if depth >= Config.MaxExprDepth else 1
-    assignw = 0 if depth >= Config.MaxExprDepth else 2
-    varw = 0 if depth >= Config.MaxExprDepth else 2
-    # fixme
+    litw = 1
+    binaryw = 2 if depth < Config.MaxExprDepth else 0
+    unaryw = 1 if depth < Config.MaxExprDepth else 0
+    assignw = 1 if depth < Config.MaxExprDepth else 0
+    varw = 2 if depth < Config.MaxExprDepth else 0
+
+    # ad hoc checks
     if len(gs.vars) == 0:
         varw = 0
+
     return randlistitemw([
-        (1, lambda: LitExpr(gs, depth+1)),
+        (litw, lambda: LitExpr(gs, depth+1)),
         (binaryw, lambda: BinaryExpr(gs, depth+1)),
         (unaryw, lambda: UnaryExpr(gs, depth+1)),
         (assignw, lambda: AssignExpr(gs, depth+1)),

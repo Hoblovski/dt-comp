@@ -22,6 +22,19 @@ class OutputManager:
             spAfter = spAfter + '\n'
         self.file.write(spBefore + s + spAfter)
 
+    def emit(self, *subs, **kwargs):
+        """A bit slower but more elegant."""
+        for sub in subs:
+            if isinstance(sub, str):
+                self.emitstr(sub)
+            elif isinstance(sub, ProgNode):
+                sub.emit(self)
+            else:
+                assert False
+        if kwargs.get('br', False) == True:
+            self.emitstr('', newLine=True)
+
+
 class GeneratorState:
     """Static state of the generating program. Used to aid generation."""
     def __init__(self):

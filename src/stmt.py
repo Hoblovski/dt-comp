@@ -16,9 +16,7 @@ class ReturnStmt(Statement):
         self.val = randexpr(gs, 0)
 
     def emit(self, out):
-        out.emitstr('return');
-        self.val.emit(out)
-        out.emitstr(';', newLine=True)
+        out.emit('return', self.val, ';', br=True)
 
 class BlockStmt(Statement):
     def __init__(self, gs, depth):
@@ -34,14 +32,28 @@ class BlockStmt(Statement):
         self.hdecls += [name]
 
     def emit(self, out):
-        out.emitstr('{', newLine=True);
+        out.emit('{', br=True)
         for hdecl in self.hdecls:
-            out.emitstr('int')
-            out.emitstr(hdecl)
-            out.emitstr(';', newLine=True)
-        for sub in self.subs:
-            sub.emit(out)
-        out.emitstr('}', newLine=True)
+            out.emit('int', hdecl, ';', br=True)
+        out.emit(*self.subs)
+        out.emit('}', br=True)
+
+class IfStmt(Statement):
+    def __init__(self, gs, depth):
+        super().__init__(gs, depth)
+
+        self.cond = randexpr(gs, 0)
+        self.thclause = randstmt(gs, depth)
+        if randn(100) < 60:
+            self.elclause = randstmt(gs, depth)
+        else:
+            self.elclause = None
+
+    def emit(self, out):
+        out.emit('if', '(', self.cond, ')', br=True)
+        out.emit(self.thclause)
+        if self.elclause is not None:
+            out.emit('else', self.elclause, br=True)
 
 class ExprStmt(Statement):
     def __init__(self, gs, depth):
@@ -53,16 +65,18 @@ class ExprStmt(Statement):
             self.expr = randexpr(gs, 0)
 
     def emit(self, out):
-        self.expr.emit(out)
-        out.emitstr(';', newLine=True)
+        out.emit(self.expr, ';', br=True)
 
 def randstmt(gs, depth, noBlock=False):
-    blockWeightDefault = 2
-    blockWeight = 0 if depth >= Config.MaxBlockDepth else blockWeightDefault
+    exprw = 10
+    returnw = 1
+    blockw = 3 if depth < Config.MaxBlockDepth else 0
+    ifw = 3 if depth < Config.MaxBlockDepth else 0
 
     rv= randlistitemw([
-        (10, lambda: ExprStmt(gs, depth+1)),
-        (1, lambda: ReturnStmt(gs, depth+1)),
-        (blockWeight, lambda: BlockStmt(gs, depth+1)),
+        (exprw, lambda: ExprStmt(gs, depth+1)),
+        (returnw, lambda: ReturnStmt(gs, depth+1)),
+        (blockw, lambda: BlockStmt(gs, depth+1)),
+        (ifw, lambda: IfStmt(gs, depth+1)),
     ])()
     return rv
