@@ -24,14 +24,15 @@ class Function(ProgNode):
         super().__init__(gs)
         self.name = f'f_{len(gs.funcs)}'
         # TODO: args
-        self.body = randstmt(gs)
+        self.body = BlockStmt(gs, depth=0)
+        # TODO: recursive
         gs.addFunc(self)
 
     def emit(self, out):
         out.emitstr('int')
         out.emitstr(self.name)
         out.emitstr('()')
-        out.emitstr('{', newLine=True)
         self.body.emit(out)
-        out.emitstr('}', newLine=True)
+        out.emitstr('', newLine=True)
+
 
