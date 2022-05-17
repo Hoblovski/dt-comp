@@ -3,10 +3,10 @@ Randomly generate a C function. Tailered for minidecaf.
 
 # Usage
 ```bash
-$ ./cgen > t.c
-# OPTIONAL formatting
-# $ clang-format --style=LLVM -i t.c
-$ cat t.c
+$ ./cgen
+$ ./cgenf
+
+$ ./cgen -s 10007 # specify seed
 ```
 
 Generation legality test: `while ./cgen > t.c && gcc t.c; do done`
