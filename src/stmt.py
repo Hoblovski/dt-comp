@@ -44,7 +44,7 @@ class IfStmt(Statement):
 
         self.cond = randexpr(gs, 0)
         self.thclause = randstmt(gs, depth)
-        if randn(100) < 60:
+        if randn(100) < Config.IfStmtWithElseProb:
             self.elclause = randstmt(gs, depth)
         else:
             self.elclause = None
@@ -59,7 +59,7 @@ class ExprStmt(Statement):
     def __init__(self, gs, depth):
         super().__init__(gs, depth)
         # generate assignments at higher probability
-        if randn(100) <= 80:
+        if randn(100) <= Config.ExprStmtAssign:
             self.expr = AssignExpr(gs, 0)
         else:
             self.expr = randexpr(gs, 0)
@@ -68,10 +68,10 @@ class ExprStmt(Statement):
         out.emit(self.expr, ';', br=True)
 
 def randstmt(gs, depth, noBlock=False):
-    exprw = 10
-    returnw = 1
-    blockw = 3 if depth < Config.MaxBlockDepth else 0
-    ifw = 3 if depth < Config.MaxBlockDepth else 0
+    exprw = Config.StmtWeights.ExprW
+    returnw = Config.StmtWeights.ReturnW
+    blockw = Config.StmtWeights.BlockW if depth < Config.MaxBlockDepth else 0
+    ifw = Config.StmtWeights.IfW if depth < Config.MaxBlockDepth else 0
 
     rv= randlistitemw([
         (exprw, lambda: ExprStmt(gs, depth+1)),

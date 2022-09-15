@@ -63,11 +63,11 @@ class AssignExpr(Expression):
         out.emit('(', self.lhs, '=', self.rhs, ')')
 
 def randexpr(gs, depth):
-    litw = 1
-    binaryw = 2 if depth < Config.MaxExprDepth else 0
-    unaryw = 1 if depth < Config.MaxExprDepth else 0
-    assignw = 1 if depth < Config.MaxExprDepth else 0
-    varw = 2 if depth < Config.MaxExprDepth else 0
+    litw = Config.ExprWeights.LitW
+    binaryw = Config.ExprWeights.BinaryW if depth < Config.MaxExprDepth else 0
+    unaryw = Config.ExprWeights.UnaryW if depth < Config.MaxExprDepth else 0
+    assignw = Config.ExprWeights.AssignW if depth < Config.MaxExprDepth else 0
+    varw = Config.ExprWeights.VarW if depth < Config.MaxExprDepth else 0
 
     # ad hoc checks
     if len(gs.vars) == 0:
