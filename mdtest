@@ -1,0 +1,71 @@
+#!/bin/bash
+# duipai minidecaf
+#
+# Setup:
+# 1. install riscv gcc and qemu
+# 2. configure ${MINIDECAF} variable
+
+MINIDECAF=../minidecaf/md
+CC=riscv64-unknown-elf-gcc
+# Werror to rule out compile-time overflows UBs.
+CCFLAGS="-march=rv32im -mabi=ilp32"
+WEFLAGS="-Werror=overflow -Werror=div-by-zero"
+
+GEN_FILENAME="t.c"
+
+comp1() {
+	rv=$($MINIDECAF $GEN_FILENAME t.s >comp1.log 2>&1 ; echo $?)
+	$CC $CCFLAGS t.s -o comp1.out
+	return $rv
+}
+
+comp2() {
+	$CC $CCFLAGS $GEN_FILENAME -o comp2.out >comp2.log 2>&1
+}
+
+comp2_we() {
+	$CC $CCFLAGS $WEFLAGS $GEN_FILENAME -o comp2.out >/dev/null 2>&1
+}
+
+run1() {
+	qemu-riscv32 comp1.out
+}
+
+run2() {
+	qemu-riscv32 comp2.out
+}
+
+echo "Cross checking compilers: minidecaf (1) vs gcc (2)"
+while true; do
+	# delete the leading comment
+	./cgen | sed 1d > $GEN_FILENAME
+
+	# filter out compile time UB
+	if ! comp2_we ; then
+		echo -n ,
+		continue;
+	fi
+	echo -n .
+
+	# check compilation
+	comp1_res=$(comp1 ; echo $?)
+	comp2_res=$(comp2 ; echo $?)
+	if [[ $comp1_res != $comp2_res ]]; then
+		echo "Compilation returned different values:"
+		echo "comp1_res: $comp1_res"
+		echo "comp2_res: $comp2_res"
+		echo "Generated C file: $GEN_C_FILENAME"
+		exit 1
+	fi
+
+	# check run
+	run1_res=$(run1 ; echo $?)
+	run2_res=$(run2 ; echo $?)
+	if [[ $run1_res != $run2_res ]]; then
+		echo "Compiled program returned different values:"
+		echo "run1_res: $run1_res"
+		echo "run2_res: $run2_res"
+		echo "Generated C file: $GEN_C_FILENAME"
+		exit 1
+	fi
+done
