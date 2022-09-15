@@ -4,23 +4,26 @@ Randomly generate a C function. Tailered for minidecaf.
 # Usage
 ```bash
 $ ./cgen
-$ ./cgenf
+$ ./cgenf # Same as cgen, but format the output C file
 
 $ ./cgen -s 10007 # specify seed
 ```
 
-Generation legality test: `while ./cgen > t.c && gcc t.c; do done`
+You can conduct mass-scale duipai (differential testing) with `./mdtest`
 
 # Tweaks
 `./cgen -h` and check `config.py`.
 
-# Problems
-* `-Woverflow` and `-Wdiv-by-zero`
+# TODO
 * Python is too slow, switch to Rust.
+* Multi-threading for mass-scale duipai
+* Add feature switch so user can choose which features of C to incorporate
+* Get rid of undefined behaviour e.g. `(a=5) + (a=6) - a`
+  - Already `-Werror=overflow` etc but that is not enough
 
 # Methodology
-My approach is ad hoc.
-There can be some more principled approach like grammar guided generation but I doubt their practicality.
+My approach is ad hoc, same as that of CSmith.
+There can be some more principled approaches like grammar guided generation but I doubt their practicality.
 
 The apprach is basically grammar driven DFS; the DFS functions are Stmt/Expr constructors.
 DFS search state (declared variables etc) is stored in `GeneratorState` i.e. gs.
