@@ -12,7 +12,11 @@ class Expression(ProgNode):
 class LitExpr(Expression):
     def __init__(self, gs, depth):
         super().__init__(gs, depth)
-        self.val = randn(1000000)
+        # bigger probability at lower values
+        if randn(3) < 1:
+            self.val = randn(100)
+        else:
+            self.val = randn(randn(1000000))
 
     def emit(self, out):
         out.emitstr(str(self.val))
